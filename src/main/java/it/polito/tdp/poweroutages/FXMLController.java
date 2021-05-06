@@ -5,7 +5,11 @@
 package it.polito.tdp.poweroutages;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
+
+import it.polito.tdp.poweroutages.model.Evento;
 import it.polito.tdp.poweroutages.model.Model;
 import it.polito.tdp.poweroutages.model.Nerc;
 import javafx.event.ActionEvent;
@@ -38,7 +42,47 @@ public class FXMLController {
     
     @FXML
     void doRun(ActionEvent event) {
+    	
     	txtResult.clear();
+    	//gli passiamo cio che mette l'utente
+    	Nerc nerc= cmbNerc.getSelectionModel().getSelectedItem();
+    	String anni= txtYears.getText();
+    	String oreMax= txtHours.getText();
+    	
+    	try {
+    		
+    		if(nerc!=null) {
+    		int anniInput= Integer.parseInt(anni);
+    		int oreMaxInput=  Integer.parseInt(oreMax);
+    		
+    		if(anniInput<=0 || oreMaxInput<=0)
+    			return;
+    		
+    		List<Evento> worstCaseAnalysis= new ArrayList<>(this.model.worstCaseAnalysis(nerc.getId(), anniInput, oreMaxInput));
+         
+    		int numeroPersone= this.model.calcoloPersoneCoinvolte(worstCaseAnalysis);
+    		int numeroOre= this.model.calcoloOreOutput(worstCaseAnalysis);
+    		//append aggiungo al testo che c'è gia quindi se ho piu righe mi serve append
+    		txtResult.appendText("Persone coinvolte: "+numeroPersone+ "\n");
+    		txtResult.appendText("Ore totali : "+numeroOre+ "\n");
+    		
+    		for(Evento e: worstCaseAnalysis) {
+    		 txtResult.appendText(e.getDataInizio().getYear()+" "+e.getDataInizio()+" "+e.getDataFine()+" "
+    		    +this.model.calcolaPeriodo(e)+" "+e.getCustomers_affected()+" \n");
+    		 
+    		
+    		
+    		}
+    		}
+    		
+    		} catch(NumberFormatException ne) {
+    			txtResult.setText("ERRORE FORMATI NUMERI");
+    			return;
+    		
+    	}
+    	
+    	
+    	
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
@@ -54,5 +98,8 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
-    }
+    	List<Nerc>listaNerc= this.model.getNercList();
+    	cmbNerc.getItems().addAll(listaNerc);
+    	}
+    
 }
